@@ -195,3 +195,42 @@ describe('PATCH /api/users/current', () => {
     })
 
 })
+
+describe('DELETE /api/users/current', () => {
+
+    beforeEach(async () => {
+        await UserTest.create()
+    })
+
+    afterEach(async () => {
+        await UserTest.delete()
+    })
+
+    it('should be reject to delete user if is invalid token', async () => {
+        const response = await supertest(web)
+            .delete('/api/users/current')
+            .set('X-API-TOKEN', 'test1')
+            .send({
+                name: '',
+                password: ''
+            })
+
+        logger.debug(response.body)
+        expect(response.status).toBe(401)
+        expect(response.body.errors).toBeDefined()
+    })
+
+    it('should be able to update user name', async () => {
+        const response = await supertest(web)
+            .delete('/api/users/current')
+            .set('X-API-TOKEN', 'test')
+
+        logger.debug(response.body)
+        expect(response.status).toBe(200)
+        expect(response.body.data).toBe('OK')
+
+        const user = await UserTest.get()
+        expect(user.token).toBeNull()
+    })
+
+})
