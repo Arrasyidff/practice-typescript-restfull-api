@@ -1,10 +1,11 @@
 import { prismaClient } from "../application/database";
 import { ResponseError } from "../error/response-error";
-import { CreateUserRequest, LoginUserRequest, UserResponse, toUserResponse } from "../model/user-model";
+import { CreateUserRequest, LoginUserRequest, UpdateUserRequest, UserResponse, toUserResponse } from "../model/user-model";
 import { UserValidation } from "../validation/user-validation";
 import { Validation } from "../validation/validation";
 import { v4 as uuid } from 'uuid'
 import bcrypt from 'bcrypt'
+import { User } from "@prisma/client";
 
 export class UserService {
 
@@ -45,6 +46,28 @@ export class UserService {
         response.token = user.token!
 
         return response
+    }
+
+    static async get(user: User): Promise<UserResponse>
+    {
+        return toUserResponse(user)
+    }
+
+    static async update(user: User, request: UpdateUserRequest): Promise<UserResponse>
+    {
+        const updateRequest = Validation.validate(UserValidation.UPDATE, request)
+        
+        let dataUserUpdate = {}
+        if (updateRequest.name) dataUserUpdate = {...dataUserUpdate, name: updateRequest.name}
+        if (updateRequest.password) dataUserUpdate = {...dataUserUpdate, password: await bcrypt.hash(updateRequest.password, 10)}
+        if (Object.keys(dataUserUpdate).length == 0) return toUserResponse(user)
+
+        user = {...user, ...dataUserUpdate}
+        const result = await prismaClient.user.update({
+            where: {username: user.username},
+            data: user
+        })
+        return toUserResponse(result)
     }
 
 }
