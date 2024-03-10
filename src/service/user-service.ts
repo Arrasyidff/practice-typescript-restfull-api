@@ -12,20 +12,15 @@ export class UserService {
         const registerRequest = Validation.validate(UserValidation.REGISTER, request)
 
         const totalUserWithSameUsername = await prismaClient.user.count({
-            where: {
-                username: registerRequest.username
-            }
-        })
+            where: {username: registerRequest.username}
+        })  
         
         if (totalUserWithSameUsername != 0) {
             throw new ResponseError(400, 'Username already exists')
         }
 
         registerRequest.password = await bcrypt.hash(registerRequest.password, 10)
-
-        const user = await prismaClient.user.create({
-            data: registerRequest
-        })
+        const user = await prismaClient.user.create({data: registerRequest})
 
         return toUserResponse(user)
     }

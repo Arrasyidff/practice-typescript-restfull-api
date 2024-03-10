@@ -1,15 +1,15 @@
 import { User } from "@prisma/client"
 
 export type UserResponse = {
-    username: String
-    name: String
-    token?: String
+    username: string
+    name: string
+    token?: string
 }
 
 export type CreateUserRequest = {
-    username: String
-    name: String
-    password: String
+    username: string
+    name: string
+    password: string
 }
 
 export function toUserResponse(user: User): UserResponse
