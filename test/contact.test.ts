@@ -82,3 +82,53 @@ describe('POST /api/contacts', () => {
     })
 
 })
+
+describe('GET /api/contacts', () => {
+
+    beforeEach(async () => {
+        await UserTest.create()
+        await ContactTest.create()
+    })
+
+    afterEach(async () => {
+        await ContactTest.deleteAll()
+        await UserTest.delete()
+    })
+
+    it('should be able get contact', async () => {
+        const contact = await ContactTest.get()
+        const response = await supertest(web)
+            .get(`/api/contacts/${contact.id}`)
+            .set('X-API-TOKEN', 'test')
+
+        logger.debug(response.body)
+        expect(response.status).toBe(200)
+        expect(response.body.data.first_name).toBe(contact.first_name)
+        expect(response.body.data.last_name).toBe(contact.last_name)
+        expect(response.body.data.email).toBe(contact.email)
+        expect(response.body.data.phone).toBe(contact.phone)
+    })
+
+    it('should be reject if wrong token', async () => {
+        const contact = await ContactTest.get()
+        const response = await supertest(web)
+            .get(`/api/contacts/${contact.id}`)
+            .set('X-API-TOKEN', 'test1')
+
+        logger.debug(response.body)
+        expect(response.status).toBe(401)
+        expect(response.body.errors).toBeDefined()
+    })
+
+    it('should be reject if wrong id', async () => {
+        const contact = await ContactTest.get()
+        const response = await supertest(web)
+            .get(`/api/contacts/${contact.id + 1}`)
+            .set('X-API-TOKEN', 'test')
+
+        logger.debug(response.body)
+        expect(response.status).toBe(404)
+        expect(response.body.errors).toBeDefined()
+    })
+
+})

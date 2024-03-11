@@ -3,6 +3,7 @@ import { CreateContactRequest, ContactResponse, toContactResponse } from '../mod
 import { ContactValidation } from '../validation/contact-validation'
 import { Validation } from '../validation/validation'
 import { prismaClient } from '../application/database'
+import { ResponseError } from '../error/response-error'
 
 export class ContactService {
 
@@ -12,6 +13,14 @@ export class ContactService {
 
         const payload = {...createRequest, username: user.username}
         const contact = await prismaClient.contact.create({data: payload})
+
+        return toContactResponse(contact)
+    }
+
+    static async get(user: User, contactId: number): Promise<ContactResponse>
+    {
+        const contact = await prismaClient.contact.findUnique({where: {id: contactId, username: user.username}})
+        if (!contact) throw new ResponseError(404, 'Contact is not found')
 
         return toContactResponse(contact)
     }
