@@ -65,25 +65,9 @@ describe('POST /api/contacts', () => {
         expect(response.body.errors).toBeDefined()
     })
 
-    it('should be reject if empty first_name', async () => {
-        const response = await supertest(web)
-            .post('/api/contacts')
-            .set('X-API-TOKEN', 'test')
-            .send({
-                first_name: '',
-                last_name: 'Fadel Fatonsyah',
-                email: 'aff.anton20@gmail.com',
-                phone: '1111',
-            })
-
-        logger.debug(response.body)
-        expect(response.status).toBe(400)
-        expect(response.body.errors).toBeDefined()
-    })
-
 })
 
-describe('GET /api/contacts', () => {
+describe('GET /api/contacts/:contactId', () => {
 
     beforeEach(async () => {
         await UserTest.create()
@@ -128,6 +112,74 @@ describe('GET /api/contacts', () => {
 
         logger.debug(response.body)
         expect(response.status).toBe(404)
+        expect(response.body.errors).toBeDefined()
+    })
+
+})
+
+describe('PUT /api/contacts/:contactId', () => {
+
+    beforeEach(async () => {
+        await UserTest.create()
+        await ContactTest.create()
+    })
+
+    afterEach(async () => {
+        await ContactTest.deleteAll()
+        await UserTest.delete()
+    })
+
+    it('should be update contact', async () => {
+        const contact = await ContactTest.get()
+        const response = await supertest(web)
+            .put(`/api/contacts/${contact.id}`)
+            .set('X-API-TOKEN', 'test')
+            .send({
+                first_name: 'Arrasyid',
+                last_name: 'Fadel Fatonsyah',
+                email: 'aff.anton20@gmail.com',
+                phone: '1111',
+            })
+
+        logger.debug(response.body)
+        expect(response.status).toBe(200)
+        expect(response.body.data.first_name).toBe('Arrasyid')
+        expect(response.body.data.last_name).toBe('Fadel Fatonsyah')
+        expect(response.body.data.email).toBe('aff.anton20@gmail.com')
+        expect(response.body.data.phone).toBe('1111')
+    })
+
+    it('should be reject if wrong token', async () => {
+        const contact = await ContactTest.get()
+        const response = await supertest(web)
+            .put(`/api/contacts/${contact.id}`)
+            .set('X-API-TOKEN', 'test1')
+            .send({
+                first_name: '',
+                last_name: 'Fadel Fatonsyah',
+                email: 'aff.anton20@gmail.com',
+                phone: '1111',
+            })
+
+        logger.debug(response.body)
+        expect(response.status).toBe(401)
+        expect(response.body.errors).toBeDefined()
+    })
+
+    it('should be reject if empty first_name', async () => {
+        const contact = await ContactTest.get()
+        const response = await supertest(web)
+            .put(`/api/contacts/${contact.id}`)
+            .set('X-API-TOKEN', 'test')
+            .send({
+                first_name: '',
+                last_name: 'Fadel Fatonsyah',
+                email: 'aff.anton20@gmail.com',
+                phone: '1111',
+            })
+
+        logger.debug(response.body)
+        expect(response.status).toBe(400)
         expect(response.body.errors).toBeDefined()
     })
 
