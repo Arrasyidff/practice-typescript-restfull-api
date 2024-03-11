@@ -133,3 +133,104 @@ describe('GET /api/contacts/:contactId/addresses/:addressId', () => {
     })
 
 })
+
+describe('POST /api/contacts/:contactId/addresses/:addressId', () => {
+
+    beforeEach(async () => {
+        await UserTest.create()
+        await ContactTest.create()
+        await AddressTest.create()
+    })
+
+    afterEach(async () => {
+        await AddressTest.deleteAll()
+        await ContactTest.deleteAll()
+        await UserTest.delete()
+    })
+
+    it('should be able to update address', async () => {
+        const contact = await ContactTest.get()
+        const address = await AddressTest.get()
+        
+        const response = await supertest(web)
+            .put(`/api/contacts/${contact.id}/addresses/${address.id}`)
+            .set('X-API-TOKEN', 'test')
+            .send({
+                street: 'JL. Merta Agung No. 55',
+                city: 'Badung',
+                province: 'Bali',
+                country: 'Indonesia',
+                postal_code: '80361'
+            })
+
+        logger.debug(response.body)
+        expect(response.status).toBe(200)
+        expect(response.body.data.id).toBe(address.id)
+        expect(response.body.data.street).toBe('JL. Merta Agung No. 55')
+        expect(response.body.data.city).toBe('Badung')
+        expect(response.body.data.province).toBe('Bali')
+        expect(response.body.data.country).toBe('Indonesia')
+        expect(response.body.data.postal_code).toBe('80361')
+    })
+
+    it('should be reject to update address if request is invalid', async () => {
+        const contact = await ContactTest.get()
+        const address = await AddressTest.get()
+
+        const response = await supertest(web)
+            .put(`/api/contacts/${contact.id}/addresses/${address.id}`)
+            .set('X-API-TOKEN', 'test')
+            .send({
+                street: 'JL. Merta Agung No. 55',
+                city: 'Badung',
+                province: 'Bali',
+                country: '',
+                postal_code: ''
+            })
+
+        logger.debug(response.body)
+        expect(response.status).toBe(400)
+        expect(response.body.errors).toBeDefined()
+    })
+
+    it('should be reject to update address if contact is not found', async () => {
+        const contact = await ContactTest.get()
+        const address = await AddressTest.get()
+
+        const response = await supertest(web)
+            .put(`/api/contacts/${contact.id + 1}/addresses/${address.id}`)
+            .set('X-API-TOKEN', 'test')
+            .send({
+                street: 'JL. Merta Agung No. 55',
+                city: 'Badung',
+                province: 'Bali',
+                country: 'Indonesia',
+                postal_code: '80361'
+            })
+
+        logger.debug(response.body)
+        expect(response.status).toBe(404)
+        expect(response.body.errors).toBeDefined()
+    })
+
+    it('should be reject to update address if address is not found', async () => {
+        const contact = await ContactTest.get()
+        const address = await AddressTest.get()
+
+        const response = await supertest(web)
+            .put(`/api/contacts/${contact.id}/addresses/${address.id+1}`)
+            .set('X-API-TOKEN', 'test')
+            .send({
+                street: 'JL. Merta Agung No. 55',
+                city: 'Badung',
+                province: 'Bali',
+                country: 'Indonesia',
+                postal_code: '80361'
+            })
+
+        logger.debug(response.body)
+        expect(response.status).toBe(404)
+        expect(response.body.errors).toBeDefined()
+    })
+
+})
