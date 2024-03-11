@@ -231,3 +231,100 @@ describe('DELETE /api/contacts/:contactId', () => {
     })
 
 })
+
+describe('GET /api/contacts', () => {
+    
+    beforeEach(async () => {
+        await UserTest.create()
+        await ContactTest.create()
+    })
+
+    afterEach(async () => {
+        await ContactTest.deleteAll()
+        await UserTest.delete()
+    })
+
+    it('should be abel to search contact', async () => {
+        const response = await supertest(web)
+            .get('/api/contacts')
+            .set('X-API-TOKEN', 'test')
+
+        logger.debug(response.body)
+        expect(response.status).toBe(200)
+        expect(response.body.data.length).toBe(1)
+        expect(response.body.pagging.current_page).toBe(1)
+        expect(response.body.pagging.total_page).toBe(1)
+        expect(response.body.pagging.size).toBe(10)
+    })
+
+    it('should be abel to search contact with query name', async () => {
+        const response = await supertest(web)
+            .get('/api/contacts')
+            .query({name: 'st'})
+            .set('X-API-TOKEN', 'test')
+
+        logger.debug(response.body)
+        expect(response.status).toBe(200)
+        expect(response.body.data.length).toBe(1)
+        expect(response.body.pagging.current_page).toBe(1)
+        expect(response.body.pagging.total_page).toBe(1)
+        expect(response.body.pagging.size).toBe(10)
+    })
+
+    it('should be abel to search contact with query email', async () => {
+        const response = await supertest(web)
+            .get('/api/contacts')
+            .query({email: '.com'})
+            .set('X-API-TOKEN', 'test')
+
+        logger.debug(response.body)
+        expect(response.status).toBe(200)
+        expect(response.body.data.length).toBe(1)
+        expect(response.body.pagging.current_page).toBe(1)
+        expect(response.body.pagging.total_page).toBe(1)
+        expect(response.body.pagging.size).toBe(10)
+    })
+
+    it('should be abel to search contact with query phone', async () => {
+        const response = await supertest(web)
+            .get('/api/contacts')
+            .query({phone: '1'})
+            .set('X-API-TOKEN', 'test')
+
+        logger.debug(response.body)
+        expect(response.status).toBe(200)
+        expect(response.body.data.length).toBe(1)
+        expect(response.body.pagging.current_page).toBe(1)
+        expect(response.body.pagging.total_page).toBe(1)
+        expect(response.body.pagging.size).toBe(10)
+    })
+
+    it('should be abel to search contact with query phone empty search', async () => {
+        const response = await supertest(web)
+            .get('/api/contacts')
+            .query({phone: '0'})
+            .set('X-API-TOKEN', 'test')
+
+        logger.debug(response.body)
+        expect(response.status).toBe(200)
+        expect(response.body.data.length).toBe(0)
+        expect(response.body.pagging.current_page).toBe(1)
+        expect(response.body.pagging.total_page).toBe(1)
+        expect(response.body.pagging.size).toBe(10)
+    })
+
+    it('should be abel to search contact with pagging', async () => {
+        const response = await supertest(web)
+            .get('/api/contacts')
+            .query({page: 2, size: 1})
+            .set('X-API-TOKEN', 'test')
+
+        logger.debug(response.body)
+        expect(response.status).toBe(200)
+        expect(response.body.data.length).toBe(0)
+        expect(response.body.pagging.current_page).toBe(2)
+        expect(response.body.pagging.total_page).toBe(1)
+        expect(response.body.pagging.size).toBe(1)
+    })
+
+})

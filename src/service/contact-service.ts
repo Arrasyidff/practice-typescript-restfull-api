@@ -1,9 +1,10 @@
 import { Contact, User } from '@prisma/client'
-import { CreateContactRequest, ContactResponse, toContactResponse, UpdateContactRequest } from '../model/contact-model'
+import { CreateContactRequest, ContactResponse, toContactResponse, UpdateContactRequest, SearchContactRequest } from '../model/contact-model'
 import { ContactValidation } from '../validation/contact-validation'
 import { Validation } from '../validation/validation'
 import { prismaClient } from '../application/database'
 import { ResponseError } from '../error/response-error'
+import { PageAble } from '../model/page'
 
 export class ContactService {
 
@@ -50,6 +51,39 @@ export class ContactService {
 
         const contact = await prismaClient.contact.delete({where: {id: contactId, username: user.username}})
         return toContactResponse(contact)
+    }
+
+    static async search(user: User, request: SearchContactRequest): Promise<PageAble<ContactResponse>>
+    {
+        const searchRequest = Validation.validate(ContactValidation.SEARCH, request)
+
+        const filters = []
+        if (request.name) filters.push({OR: [
+            {first_name: {contains: searchRequest.name}},
+            {last_name: {contains: searchRequest.name}}
+        ]})
+        if (request.email) filters.push({email: {contains: searchRequest.email}})
+        if (request.phone) filters.push({phone: {contains: searchRequest.phone}})
+        let whereOptions = {username: user.username}
+        if (filters.length != 0) whereOptions = {...whereOptions, ...{AND: filters}}
+
+        const skip = (searchRequest.page - 1) * searchRequest.size
+        const contacts = await prismaClient.contact.findMany({
+            where: whereOptions,
+            take: searchRequest.size,
+            skip
+        })
+
+        const contactsTotal = await prismaClient.contact.count({where: {username: user.username}})
+
+        return {
+            data: contacts.map(contact => toContactResponse(contact)),
+            pagging: {
+                current_page: searchRequest.page,
+                total_page: Math.ceil(contactsTotal / searchRequest.size),
+                size: searchRequest.size
+            }
+        }
     }
 
 }
