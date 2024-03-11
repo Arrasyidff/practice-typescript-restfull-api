@@ -1,5 +1,5 @@
 import { Address, User } from "@prisma/client";
-import { AddressResponse, CreateAddressRequest, GetAddressRequest, UpdateAddressRequest, toAddressResponse } from '../model/address-model'
+import { AddressResponse, CreateAddressRequest, GetAddressRequest, RemoveAddressRequest, UpdateAddressRequest, toAddressResponse } from '../model/address-model'
 import { Validation } from "../validation/validation";
 import { AddressValidation } from "../validation/address-validation";
 import { ContactService } from "./contact-service";
@@ -41,10 +41,23 @@ export class AddressService {
         const updateRequest = Validation.validate(AddressValidation.UPDATE, request)
         await ContactService.isContactExists(user.username, updateRequest.contact_id)
         await this.isExistsAddress(updateRequest.id, updateRequest.contact_id)
-        
+
         const address = await prismaClient.address.update({
             where: {id: updateRequest.id, contact_id: updateRequest.contact_id},
             data: updateRequest
+        })
+
+        return toAddressResponse(address)
+    }
+
+    static async remopve(user: User, request: RemoveAddressRequest): Promise<AddressResponse>
+    {
+        const removeRequest = Validation.validate(AddressValidation.REMOVE, request)
+        await ContactService.isContactExists(user.username, removeRequest.contact_id)
+        await this.isExistsAddress(removeRequest.id, removeRequest.contact_id)
+
+        const address = await prismaClient.address.delete({
+            where: {id: removeRequest.id, contact_id: removeRequest.contact_id},
         })
 
         return toAddressResponse(address)
